@@ -1,7 +1,87 @@
 <!DOCTYPE html>
 <html>
 <body>
-<h1>Hello World</h1>
-<p>I'm hosted with GitHub Pages.</p>
+<button id = "startButton" onclick = "startFunc()">
+  start
+</button>
+<script>
+  let ctx = new (window.AudioContext || window.webkitAudioContext)();
+  ctx.suspend();
+
+
+  function SoftRock() {
+  ///////////EROSION TRIANGLE
+  //noise gen
+    this.bufferSize = 2 * ctx.sampleRate;
+    this.noiseBuffer = ctx.createBuffer(1, this.bufferSize, ctx.sampleRate);
+    this.output = this.noiseBuffer.getChannelData(0);
+
+    for (let i = 0; i < this.bufferSize; i++) {
+        this.output[i] = Math.random() * 2 - 1;
+    }
+
+    this.whiteNoise = ctx.createBufferSource();
+    this.whiteNoise.buffer = this.noiseBuffer;
+    this.whiteNoise.loop = true;
+    this.whiteNoise.start(0);
+
+    //this.whiteNoise.connect(ctx.destination);
+
+
+  //LPF
+    this.lpF = ctx.createBiquadFilter();
+    this.lpF.type = "lowpass";
+    this.lpF.frequency.value = 1000;
+    this.lpGain = ctx.createGain();
+    this.lpGain.gain.value = 0.2;
+
+    this.whiteNoise.connect(this.lpF);
+    this.lpF.connect(this.lpGain);
+
+
+  //delay init
+    this.del = ctx.createDelay(0.1);
+    this.delGain = ctx.createGain();/////ERROSION Output
+
+    this.lpGain.connect(this.del.delayTime);
+    this.del.connect(this.delGain);
+
+  /////////OSC
+  //osc init
+    this.freq = 500;
+    this.tri;
+    this.triAmp;
+
+    this.triGain = ctx.createGain();
+    this.triGain.gain.vaue = 0.5;
+
+
+    this.tri = ctx.createOscillator();
+    this.tri.type = "triangle";
+    this.tri.start();
+
+    // triAmp = ctx.createGain();
+    // triAmp.gain.value = 0.5;
+
+    this.tri.frequency.value = this.freq;
+
+    this.tri.connect(this.triGain);
+    //triAmp.connect(triGain);
+
+    this.triGain.connect(this.del);
+    this.delGain.connect(ctx.destination);//////AJOUTER PAN
+
+  };
+
+  //let bruit = softRock.wNoise();
+  //bruit.connect(ctx.destination);
+
+  let test = new SoftRock();
+
+  const startFunc = function start() {
+    console.log("launched !");
+    ctx.resume();
+  }
+</script>
 </body>
 </html>
